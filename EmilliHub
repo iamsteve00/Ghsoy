@@ -1,0 +1,321 @@
+--|| Inter Face Graphic (gui)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "BrookhavenScript"
+ScreenGui.Parent = game.CoreGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 200, 0, 300)
+MainFrame.Position = UDim2.new(0.05, 0, 0.1, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+MainFrame.BorderSizePixel = 2
+MainFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+MainFrame.Parent = ScreenGui
+MainFrame.Draggable = true
+
+local Title = Instance.new("TextLabel")
+Title.Text = "Brookhaven Tools"
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.SourceSansBold
+Title.TextSize = 16
+Title.AnchorPoint = Vector2.new(0.5, 0)
+Title.Position = UDim2.new(0.5, 0, 0, 0)
+Title.Parent = MainFrame
+
+local EImage = Instance.new("ImageLabel")
+EImage.Size = UDim2.new(0, 40, 0, 40)
+EImage.Position = UDim2.new(0.8, 0, 0.02, 0)
+EImage.BackgroundTransparency = 1
+-- Substitua pelo ID da sua imagem "E"
+EImage.Image = "rbxassetid://0"
+EImage.Parent = MainFrame
+
+local ScrollingFrame = Instance.new("ScrollingFrame")
+ScrollingFrame.Name = "Functions"
+ScrollingFrame.Size = UDim2.new(1, 0, 0.85, 0)
+ScrollingFrame.Position = UDim2.new(0, 0, 0.15, 0)
+ScrollingFrame.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+ScrollingFrame.BorderSizePixel = 1
+ScrollingFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+ScrollingFrame.CanvasSize = UDim2.new(0, 0, 1, 0)
+ScrollingFrame.Parent = MainFrame
+
+local function createButton(text, yPosition, callback)
+    local button = Instance.new("TextButton")
+    button.Text = text
+    button.Size = UDim2.new(0.9, 0, 0, 30)
+    button.Position = UDim2.new(0.05, 0, yPosition, 0)
+    button.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Font = Enum.Font.SourceSans
+    button.TextSize = 14
+    button.Parent = ScrollingFrame
+    button.MouseButton1Click:Connect(callback)
+    return button
+end
+
+local function createTextBox(placeholderText, yPosition, callback)
+    local textBox = Instance.new("TextBox")
+    textBox.PlaceholderText = placeholderText
+    textBox.Size = UDim2.new(0.5, 0, 0, 30)
+    textBox.Position = UDim2.new(0.45, 0, yPosition, 0)
+    textBox.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    textBox.Font = Enum.Font.SourceSans
+    textBox.TextSize = 14
+    textBox.Parent = ScrollingFrame
+    textBox.ClearTextOnFocus = false
+    textBox.Focused:Connect(function()
+        if textBox.Text == placeholderText then
+            textBox.Text = ""
+        end
+    end)
+    textBox.FocusLost:Connect(function()
+        if textBox.Text == "" then
+            textBox.Text = placeholderText
+        end
+    end)
+    if callback then
+        textBox.FocusLost:Connect(function()
+            callback(textBox.Text)
+        end)
+        textBox.Submit:Connect(function()
+            callback(textBox.Text)
+            textBox:ReleaseFocus()
+        end)
+    end
+    return textBox
+end
+
+local function createSlider(text, yPosition, minValue, maxValue, defaultValue, callback)
+    local label = Instance.new("TextLabel")
+    label.Text = text .. ": " .. defaultValue
+    label.Size = UDim2.new(0.4, 0, 0, 30)
+    label.Position = UDim2.new(0.05, 0, yPosition, 0)
+    label.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.Font = Enum.Font.SourceSans
+    label.TextSize = 14
+    label.Parent = ScrollingFrame
+
+    local slider = Instance.new("Slider")
+    slider.Name = text .. "Slider"
+    slider.Size = UDim2.new(0.5, 0, 0, 30)
+    slider.Position = UDim2.new(0.45, 0, yPosition, 0)
+    slider.MinValue = minValue
+    slider.MaxValue = maxValue
+    slider.Value = defaultValue
+    slider.Parent = ScrollingFrame
+    slider.Changed:Connect(function(value)
+        label.Text = text .. ": " .. math.floor(value * 100) / 100
+        if callback then
+            callback(value)
+        end
+    end)
+    return slider
+end
+
+local function getLocalPlayer()
+    return game.Players.LocalPlayer
+end
+
+local function getAllPlayers()
+    return game.Players:GetPlayers()
+end
+
+local function getPlayerByName(playerName)
+    for _, player in ipairs(getAllPlayers()) do
+        if player.Name:lower() == playerName:lower() then
+            return player
+        end
+    end
+    return nil
+end
+
+-- // Functions
+
+-- Touch music
+local musicTextBox
+local function playMusic(soundId)
+    if not tonumber(soundId) then
+        warn("ID de música inválido.")
+        return
+    end
+    local sound = Instance.new("Sound")
+    sound.SoundId = "rbxassetid://" .. soundId
+    sound.Volume = 0.5
+    sound.Looped = true
+    sound.Parent = getLocalPlayer().Character or getLocalPlayer()
+    sound:Play()
+    wait(10) -- Tempo para outros jogadores carregarem o som
+    sound.Parent = nil
+end
+createButton("Tocar Música (ID)", 30, function()
+    if not musicTextBox then
+        musicTextBox = createTextBox("ID da Música", 60, playMusic)
+    end
+end)
+
+-- fright in all
+local function scareAll()
+    local sound = Instance.new("Sound")
+    sound.SoundId = "rbxassetid://insira_aqui_o_id_de_um_som_de_susto" -- Substitua pelo ID de um som de susto
+    sound.Volume = 1
+    for _, player in ipairs(getAllPlayers()) do
+        if player.Character then
+            local scareSound = sound:Clone()
+            scareSound.Parent = player.Character.Head
+            scareSound:Play()
+            game:GetService("Debris"):AddItem(scareSound, 3) -- Remove o som após 3 segundos
+        end
+    end
+    sound:Destroy()
+end
+createButton("fright in all", 90, scareAll)
+
+-- Change Speed
+local walkSpeedSlider
+local function changeWalkSpeed(speed)
+    local player = getLocalPlayer()
+    if player and player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.WalkSpeed = speed * 10 -- Multiplica para uma escala razoável
+    end
+end
+walkSpeedSlider = createSlider("Velocidade", 120, 1, 5, 2.5, changeWalkSpeed)
+
+-- Alterar Pulo
+local jumpPowerSlider
+local function changeJumpPower(power)
+    local player = getLocalPlayer()
+    if player and player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.JumpPower = power * 50 -- Multiplica para uma escala razoável
+    end
+end
+jumpPowerSlider = createSlider("Pulo", 160, 1, 5, 1, changeJumpPower)
+
+-- Change jump
+local copySkinTextBox
+local function copySkin(targetName)
+    local targetPlayer = getPlayerByName(targetName)
+    local localPlayer = getLocalPlayer()
+    if targetPlayer and targetPlayer.Character and localPlayer and localPlayer.Character then
+        local targetAppearance = game.Players:GetCharacterAppearanceAsync(targetPlayer.UserId)
+        local humanoidDescription = game:GetService("InsertService"):LoadAsset(targetAppearance):FindFirstChildOfClass("HumanoidDescription")
+        if humanoidDescription then
+            local localHumanoid = localPlayer.Character:FindFirstChild("Humanoid")
+            if localHumanoid then
+                localHumanoid:ApplyDescription(humanoidDescription)
+            end
+        else
+            warn("Não foi possível obter a descrição da skin do jogador.")
+        end
+    else
+        warn("Jogador alvo não encontrado ou personagem não carregado.")
+    end
+end
+createButton("Copiar Skin (Nome)", 200, function()
+    if not copySkinTextBox then
+        copySkinTextBox = createTextBox("Nome do Player", 230, copySkin)
+    end
+end)
+
+-- Kill Players
+local killTextBox
+local function killPlayer(targetName)
+    local targetPlayer = getPlayerByName(targetName)
+    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local humanoid = targetPlayer.Character:FindFirstChild("Humanoid")
+        if humanoid and humanoid.Health > 0 then
+            humanoid.Health = 0
+        else
+            warn("Jogador já está morto ou não encontrado.")
+        end
+    else
+        warn("Jogador alvo não encontrado ou personagem não carregado.")
+    end
+end
+createButton("Kill Player (Nome)", 260, function()
+    if not killTextBox then
+        killTextBox = createTextBox("Nome do Player", 290, killPlayer)
+    end
+end)
+
+-- Teleport
+local teleportTextBox
+local function teleportToPlayer(targetName)
+    local targetPlayer = getPlayerByName(targetName)
+    local localPlayer = getLocalPlayer()
+    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") and localPlayer and localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local targetPosition = targetPlayer.Character.HumanoidRootPart.Position + Vector3.new(0, 2, 0) -- Teleporta um pouco acima
+        localPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
+    else
+        warn("Jogador alvo não encontrado ou personagem não carregado.")
+    end
+end
+createButton("Teleportar para (Nome)", 320, function()
+    if not teleportTextBox then
+        teleportTextBox = createTextBox("Nome do Player", 350, teleportToPlayer)
+    end
+end)
+
+-- Fly
+local flying = false
+local flySpeed = 5
+local flySpeedSlider
+
+local function toggleFly()
+    flying = not flying
+    local player = getLocalPlayer()
+    if player and player.Character and player.Character:FindFirstChild("Humanoid") then
+        local humanoid = player.Character.Humanoid
+        if flying then
+            humanoid.WalkSpeed = 0
+            humanoid.JumpPower = 0
+            -- Desativar gravidade
+            if player.Character:FindFirstChild("HumanoidRootPart") then
+                player.Character.HumanoidRootPart.CanCollide = false
+            end
+        else
+            humanoid.WalkSpeed = 16 -- Valor padrão
+            humanoid.JumpPower = 50 -- Valor padrão
+            -- Ativar gravidade
+            if player.Character:FindFirstChild("HumanoidRootPart") then
+                player.Character.HumanoidRootPart.CanCollide = true
+            end
+        end
+    end
+end
+createButton("Fly (Toggle)", 380, toggleFly)
+
+local function changeFlySpeedFunc(speed)
+    flyspeed = speed * 10 -- multiplies for a reasonable scale
+end
+flySpeedSlider = createSlider("Velocidade do Fly", 410, 1, 10, 5, changeFlySpeedFunc)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input, gameProcessedEvent)
+    if not gameProcessedEvent and flying then
+        local player = getLocalPlayer()
+        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local rootPart = player.Character.HumanoidRootPart
+            local direction = Vector3.new(0, 0, 0)
+            if input.KeyCode == Enum.KeyCode.W then
+                direction = direction + rootPart.CFrame.LookVector
+            elseif input.KeyCode == Enum.KeyCode.S then
+                direction = direction - rootPart.CFrame.LookVector
+            elseif input.KeyCode == Enum.KeyCode.A then
+                direction = direction - rootPart.CFrame.RightVector
+            elseif input.KeyCode == Enum.KeyCode.D then
+                direction = direction + rootPart.CFrame.RightVector
+            elseif input.KeyCode == Enum.KeyCode.Space then
+                direction = direction + Vector3.new(0, 1, 0)
+            elseif input.KeyCode == Enum.KeyCode.LeftShift then
+                direction = direction - Vector3.new(0, 1, 0)
+            end
+            rootPart.Velocity = direction.Unit * flySpeed
+        end
+    end
+end)
+
+-- Adjust scrollingframe size to fit all scrolling frame buttons. Canvassize = udim2. New (0, 0, (410 + 30), 0)
